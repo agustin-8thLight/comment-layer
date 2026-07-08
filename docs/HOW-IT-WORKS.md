@@ -104,19 +104,43 @@ comments is a one-line config change.
   reader can only remove their own comments. This is light moderation, not
   security.
 
+## Modes and links
+
+Two modes, tracked by a body class (`cmt-mode-view` / `cmt-mode-comment`) and
+persisted per `docId`.
+
+- **Viewing** is the default: the page behaves normally, links live.
+- **Commenting** makes in-view links inert. There's no `pointer-events: none`
+  trick (that would also block text selection). Instead the document click
+  handler, when in commenting mode, calls `preventDefault()` on clicks that land
+  on an `a[href]` inside the view. The link's text stays fully selectable; only
+  navigation is suppressed. The view root also gets a `cmt-commenting` class so
+  CSS can show a text caret over those links.
+
+Because `<a>` is not in `skipSelector`, link text is part of the text map, so a
+comment can anchor to it and a highlight can be wrapped *inside* an anchor.
+Clicking a highlight is checked before the link-inert rule, so reading a comment
+always wins over following the link. A `dragstart` handler cancels native link
+dragging inside the view so a drag-select over link text doesn't become a link
+drag.
+
+Entering commenting mode: the top-bar segmented control sets it directly, and
+the selection **Comment** bubble sets it as a side effect (selecting in viewing
+mode, then clicking the bubble, flips the mode and opens the composer).
+
 ## Rendering and the control
 
 - On `mouseup`, if there's a non-collapsed selection inside the view,
   `showBubble` places the floating **Comment** bubble above it. Clicking opens
-  the composer popover; saving creates the thread and immediately reopens it as a
-  thread popover.
+  the composer popover (flipping into commenting mode first if needed); saving
+  creates the thread and immediately reopens it as a thread popover.
 - Clicking an existing highlight opens its thread. Popovers are positioned under
   the highlight and nudged left if they'd overflow the viewport.
-- `buildToggle` injects the show/hide + export control into the first element
+- `buildTools` injects the mode switch + export control into the first element
   matching `toggleHost`; if none matches it creates a floating control fixed
   bottom-right, so the layer is usable even on a page with no header or footer.
-- The per-page count next to the toggle reflects only threads whose `tab` is the
-  current page.
+- The per-page count on the Commenting segment reflects only threads whose `tab`
+  is the current page, and hides itself at zero.
 
 ## Export
 

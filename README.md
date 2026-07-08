@@ -15,6 +15,9 @@ can drop it into your own work.
   comment. Replies, author-only delete, names remembered.
 - **Anchored highlights.** Comments attach to the quoted text plus its
   surrounding context, not to a DOM path — so they hold up when the page changes.
+- **Viewing / commenting modes.** Read with links live; switch to commenting
+  (from the top bar, or just by starting a comment) and in-view links go inert so
+  text is clean to select — including link text itself.
 - **Local by default, shared when you want.** With no backend, each visitor's
   comments live in their own browser. Add the included Cloudflare Worker and
   everyone sees the same threads.

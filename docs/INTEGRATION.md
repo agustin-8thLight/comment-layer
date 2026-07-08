@@ -34,26 +34,57 @@ All fields are optional except that you'll almost always want `docId` and
 | `docId` | string | `"comments"` | Namespaces stored comments. Different docs must use different ids, or they'll share threads. Also the `doc` key in the backend and the default filename/heading base. |
 | `viewSelector` | string | `"main, #main, .content, article, #content, body"` | Where selectable text lives. **Priority-ordered**: the first selector that matches an element wins. Only text inside this element is commentable. |
 | `backend` | string \| null | `null` | `null` (or omitted) = local-only (localStorage). Set to the Worker's API base (usually `"/api"`) to share comments across visitors. |
-| `skipSelector` | string | see below | Elements whose text is excluded from selection (nav, buttons, code, etc.). |
+| `skipSelector` | string | see below | Elements whose text is excluded from selection (nav, buttons, code, etc.). Links are **not** skipped — see Modes. |
 | `context` | number | `40` | Characters of surrounding text stored on each side of a quote, used to re-anchor. Larger = more robust matching, bigger records. |
 | `pages` | array | `[]` | Optional `[id, label]` pairs. Sets the section order and labels in the Markdown export. `id` is the page's `currentView` (pathname, extensionless; `"index"` for root). |
 | `title` | string | `"<docId> comments"` | Heading at the top of the exported Markdown. |
 | `exportFilename` | string | `"<docId>-comments.md"` | Filename for the browser Export download. |
-| `toggleHost` | string | `".cmt-host, .footer-tools, .site-footer, .header-inner, .site-header, header, footer"` | Where the toggle/export control is injected. First match wins. **If nothing matches, the control floats bottom-right.** |
+| `toggleHost` | string | `".cmt-host, .footer-tools, .site-footer, .header-inner, .site-header, header, footer"` | Where the mode + export control is injected. First match wins. **If nothing matches, the control floats bottom-right.** |
 | `spa` | boolean | `false` | Set `true` for single-page hubs that swap content on `hashchange`; the layer re-renders highlights and counts when the hash changes. |
+| `defaultMode` | string | `"view"` | Mode a reader lands in: `"view"` (links live) or `"comment"` (in-view links inert, select to annotate). See Modes. |
 
 ### Default `skipSelector`
 
 ```
-nav, header, footer, aside, button, a, code, pre, script, style,
+nav, header, footer, aside, button, code, pre, script, style,
 input, textarea, select, [contenteditable], .cmt-pop, .cmt-bubble,
 .cmt-tools, [data-cmt-skip]
 ```
 
-To exclude something specific without rewriting the whole list, add the
-`data-cmt-skip` attribute to that element — it's already in the default. To make
-something *inside* a skipped region commentable, you'll need to override
-`skipSelector` with your own list.
+`<a>` is deliberately absent: link text is commentable (see Modes). To exclude
+something specific without rewriting the whole list, add the `data-cmt-skip`
+attribute to that element — it's already in the default. To make something
+*inside* a skipped region commentable, override `skipSelector` with your own list.
+
+## Modes: viewing vs commenting
+
+The layer has two modes, like Google Docs' Viewing / Suggesting split, and the
+control in your `toggleHost` switches between them.
+
+- **Viewing** (default). Links work normally, comments are visible and clickable
+  to read. This is how most people arrive.
+- **Commenting.** Links *inside the view* go inert (a click won't navigate) so
+  the whole surface — link text included — is clean to select. Selecting text
+  opens the composer. Site chrome outside the view (nav, header) keeps working,
+  so multi-page navigation is unaffected.
+
+A reader enters commenting mode two ways:
+
+1. **The top-bar control** — an explicit Viewing / Commenting switch.
+2. **Starting a comment** — selecting text in viewing mode shows the *Comment*
+   bubble; clicking it flips into commenting mode and opens the composer. So
+   links keep working until the reader actually decides to annotate.
+
+The mode is remembered per `docId` in localStorage. Set `defaultMode: "comment"`
+to open straight into commenting (e.g. a doc whose only purpose is review).
+
+**Two behaviors worth knowing:**
+
+- Clicking a highlight always opens its thread, even in viewing mode and even if
+  the highlight sits on a link — reading the comment wins over following the
+  link. (That specific link is still reachable from its `href` elsewhere.)
+- Content links are made non-draggable inside the view so a drag-select over
+  link text doesn't turn into a link drag. Site-chrome links are untouched.
 
 ## Theming
 

@@ -40,9 +40,10 @@
   <article>
     <div class="note">
       <strong>Try it:</strong> select any run of text in this article. A
-      <em>Comment</em> bubble appears — click it, add your name and a note. The
-      passage gets highlighted; click the highlight to reopen the thread. Use the
-      control at the bottom-right to hide comments or export them as Markdown.
+      <em>Comment</em> bubble appears — click it and you drop into commenting
+      mode; add your name and a note. The passage gets highlighted; click the
+      highlight to reopen the thread. The control (bottom-right here) switches
+      between <em>Viewing</em> and <em>Commenting</em> and exports as Markdown.
     </div>
 
     <h2>How anchoring works</h2>
@@ -55,20 +56,24 @@
       highlight still lands, as long as the quoted words survive.
     </p>
 
-    <h2>What gets skipped</h2>
+    <h2>Commenting on links</h2>
     <p>
-      Navigation, buttons, links, and code blocks are excluded from selection by
-      default, so you comment on content rather than on chrome. That list is
-      configurable. You can also mark any element with a <code>data-cmt-skip</code>
-      attribute to keep it out of the commentable text.
+      Navigation, buttons, and code blocks are excluded from selection, so you
+      comment on content rather than on chrome. Links are different: you can
+      comment on link text too. In <em>commenting</em> mode the document's links
+      go inert, so selecting <a href="https://example.com">a link like this one</a>
+      is clean and never navigates away. Switch back to <em>viewing</em> and the
+      same link works normally. Mark any element with <code>data-cmt-skip</code>
+      to keep it out of the commentable text.
     </p>
 
     <h2>Where comments live</h2>
     <p>
       In this example they live in localStorage, scoped to this browser and this
-      <code>docId</code>. Nobody else sees them. To run a shared team review, add
-      the Worker backend and point <code>backend</code> at it — the front end code
-      does not change beyond that one config line.
+      <code>docId</code>. Nobody else sees them. To run a shared team review, see
+      the <a href="../../backend/README.md">backend guide</a> and point
+      <code>backend</code> at the Worker — the front-end code does not change
+      beyond that one config line.
     </p>
   </article>
 

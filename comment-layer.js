@@ -4,8 +4,9 @@
    Select text anywhere in the page body, leave a comment. Comments
    anchor to the text itself (the quote plus a little surrounding
    context), so they survive markup tweaks and re-renders. A name is
-   required and remembered. A header/footer control toggles comments
-   and exports them as Markdown.
+   required and remembered. A top-bar control switches between viewing
+   (links live) and commenting (in-view links inert, select to annotate)
+   modes, and exports all comments as Markdown.
 
    Zero dependencies, zero build step. Drop in this file plus
    comment-layer.css and it works using each visitor's own browser
@@ -33,8 +34,10 @@
   /* ---- Config --------------------------------------------------- */
   var CFG = (window.CommentLayer && typeof window.CommentLayer === "object") ? window.CommentLayer : {};
 
+  // Note: <a> is intentionally NOT skipped. Link text is commentable;
+  // commenting mode makes in-view links inert so selecting them is clean.
   var DEFAULT_SKIP =
-    "nav, header, footer, aside, button, a, code, pre, script, style, " +
+    "nav, header, footer, aside, button, code, pre, script, style, " +
     "input, textarea, select, [contenteditable], " +
     ".cmt-pop, .cmt-bubble, .cmt-tools, [data-cmt-skip]";
 
@@ -53,11 +56,13 @@
   var TOGGLE_HOST = CFG.toggleHost ||
     ".cmt-host, .footer-tools, .site-footer, .header-inner, .site-header, header, footer";
   var SPA      = !!CFG.spa;   // re-render on hashchange (single-page hubs)
+  // Which mode a reader lands in. "view" (default) keeps links live.
+  var DEFAULT_MODE = (CFG.defaultMode === "comment") ? "comment" : "view";
 
   var LS = {
     name:   "cmt-name-" + DOC_ID,
     owner:  "cmt-owner",
-    hidden: "cmt-hidden-" + DOC_ID,
+    mode:   "cmt-mode-" + DOC_ID,
     data:   "cmt-data-" + DOC_ID
   };
 
@@ -231,6 +236,7 @@
     var root = viewRoot();
     if (!root) return;
     unwrap(root);
+    root.classList.toggle("cmt-commenting", mode() === "comment");
     var tab = currentView();
     threads.filter(function (t) { return t.tab === tab; }).forEach(function (t) {
       if (!t.exact) return;
@@ -277,6 +283,9 @@
       e.stopPropagation();
       var a = pendingAnchor; clearBubble();
       window.getSelection().removeAllRanges();
+      // Starting a comment from viewing mode flips the reader into
+      // commenting mode (links go inert), then opens the composer.
+      if (mode() !== "comment") setMode("comment");
       openComposer(a);
     });
     document.body.appendChild(bubble);
@@ -464,18 +473,30 @@
     setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 120);
   }
 
-  /* ---- Show / hide toggle + export ------------------------------ */
-  var toggleBtn, countEl;
-  function hidden() { return localStorage.getItem(LS.hidden) === "1"; }
-  function applyHidden(h) {
-    document.body.classList.toggle("cmt-hidden", h);
-    if (toggleBtn) toggleBtn.setAttribute("aria-pressed", h ? "false" : "true");
-    if (h) { clearBubble(); clearPop(); }
+  /* ---- Modes (viewing / commenting) + export -------------------- */
+  /* Viewing: links live, comments readable. Commenting: in-view links
+     go inert so the whole surface is freely selectable, and a selection
+     opens the composer. A reader switches modes from the top-bar
+     control, or by starting a comment (the selection bubble flips it).  */
+  var modeBtns = null, countEl = null;
+  function mode() { return localStorage.getItem(LS.mode) || DEFAULT_MODE; }
+  function applyMode() {
+    var m = mode(), commenting = m === "comment";
+    document.body.classList.toggle("cmt-mode-comment", commenting);
+    document.body.classList.toggle("cmt-mode-view", !commenting);
+    var root = viewRoot();
+    if (root) root.classList.toggle("cmt-commenting", commenting);
+    if (modeBtns) modeBtns.forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-mode") === m ? "true" : "false");
+    });
+    if (!commenting) { clearBubble(); clearPop(); }  // leaving comment mode dismisses UI
   }
+  function setMode(m) { localStorage.setItem(LS.mode, m); applyMode(); }
+
   function updateCount() {
     var n = 0, tab = currentView();
     threads.forEach(function (t) { if (t.tab === tab) n += t.messages.length; });
-    if (countEl) countEl.textContent = n;
+    if (countEl) { countEl.textContent = n; countEl.style.display = n ? "" : "none"; }
   }
   function pickHost() {
     var sels = TOGGLE_HOST.split(",");
@@ -485,23 +506,27 @@
     }
     return null;
   }
-  function buildToggle() {
+  function buildTools() {
     var tools = el("div", "cmt-tools");
     var host = pickHost();
-    // No header/footer to hang on: float a control bottom-right so the
+    // No header/footer to hang on: float the control bottom-right so the
     // layer is usable on a bare page with no chrome.
     if (!host) { tools.classList.add("cmt-tools--floating"); host = document.body; }
 
-    toggleBtn = el("button", "cmt-toggle"); toggleBtn.type = "button";
-    toggleBtn.setAttribute("aria-pressed", "true");
-    toggleBtn.setAttribute("title", "Show or hide comments on this page");
-    countEl = el("span", "cmt-toggle-count", "0");
-    toggleBtn.appendChild(el("span", "cmt-toggle-label", "Comments"));
-    toggleBtn.appendChild(countEl);
-    toggleBtn.addEventListener("click", function () {
-      var next = !hidden();
-      localStorage.setItem(LS.hidden, next ? "1" : "0");
-      applyHidden(next);
+    var modes = el("div", "cmt-modes");
+    modes.setAttribute("role", "group");
+    modes.setAttribute("aria-label", "Comment mode");
+    modeBtns = [];
+    [["view", "Viewing"], ["comment", "Commenting"]].forEach(function (def) {
+      var b = el("button", "cmt-mode-btn"); b.type = "button";
+      b.setAttribute("data-mode", def[0]);
+      b.setAttribute("title", def[0] === "comment"
+        ? "Commenting: links are inert; select text to comment"
+        : "Viewing: links work normally");
+      b.appendChild(el("span", "cmt-mode-label", def[1]));
+      if (def[0] === "comment") { countEl = el("span", "cmt-mode-count", "0"); b.appendChild(countEl); }
+      b.addEventListener("click", function () { setMode(def[0]); });
+      modes.appendChild(b); modeBtns.push(b);
     });
 
     var exportBtn = el("button", "cmt-toggle cmt-export"); exportBtn.type = "button";
@@ -510,14 +535,13 @@
     exportBtn.appendChild(exIco); exportBtn.appendChild(el("span", "cmt-toggle-label", "Export"));
     exportBtn.addEventListener("click", function () { downloadFile(EXPORT_FILE, exportMarkdown()); });
 
-    tools.appendChild(toggleBtn);
+    tools.appendChild(modes);
     tools.appendChild(exportBtn);
     host.appendChild(tools);
   }
 
   /* ---- Global listeners ----------------------------------------- */
   function onSelectionDone(e) {
-    if (hidden()) return;
     if (pop && pop.contains(e.target)) return;
     if (bubble && bubble.contains(e.target)) return;
     setTimeout(function () {
@@ -527,23 +551,38 @@
   }
 
   function init() {
-    buildToggle();
+    buildTools();
     Store.load().then(function () {
       renderAll();
-      applyHidden(hidden());
+      applyMode();
     });
 
     // Single-page hubs swap panels on hash change; re-render so counts
     // and highlights stay honest if anything in the view changed.
-    if (SPA) window.addEventListener("hashchange", function () { setTimeout(renderAll, 0); });
+    if (SPA) window.addEventListener("hashchange", function () { setTimeout(function () { renderAll(); applyMode(); }, 0); });
 
     document.addEventListener("mouseup", onSelectionDone);
 
     document.addEventListener("click", function (e) {
+      // Reading a comment always wins over following a link.
       var mk = e.target.closest && e.target.closest("mark.cmt-hl");
-      if (mk && !hidden()) { e.preventDefault(); openThread(mk.getAttribute("data-cid")); return; }
+      if (mk) { e.preventDefault(); openThread(mk.getAttribute("data-cid")); return; }
+      // In commenting mode, in-view links are inert so the surface stays
+      // freely selectable without navigating away.
+      if (mode() === "comment") {
+        var lk = e.target.closest && e.target.closest("a[href]");
+        if (lk && lk.closest(VIEW_SEL) && !lk.closest(SKIP_SEL)) { e.preventDefault(); return; }
+      }
       if (pop && !pop.contains(e.target)) clearPop();
       if (bubble && !bubble.contains(e.target)) clearBubble();
+    });
+
+    // Content links are draggable by default, which hijacks text
+    // selection. Cancel the drag inside the view so selecting a link's
+    // own text is smooth in either mode.
+    document.addEventListener("dragstart", function (e) {
+      var a = e.target.closest && e.target.closest("a[href]");
+      if (a && a.closest(VIEW_SEL) && !a.closest(SKIP_SEL)) e.preventDefault();
     });
 
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") { clearPop(); clearBubble(); } });

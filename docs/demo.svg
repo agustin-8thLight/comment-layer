@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <rect width="760" height="300" rx="12" fill="#ffffff"/>
+  <rect x="0.5" y="0.5" width="759" height="299" rx="12" fill="none" stroke="#e6e8eb"/>
+
+  <!-- Document text -->
+  <text x="40" y="58" font-size="15" fill="#1c2430">Delivery beats hard work. A client remembers</text>
+  <text x="40" y="86" font-size="15" fill="#1c2430">
+    <tspan>what you </tspan><tspan fill="#0b1220" font-weight="600">shipped</tspan><tspan>, not how many</tspan>
+  </text>
+  <text x="40" y="114" font-size="15" fill="#1c2430">hours it cost you.</text>
+
+  <!-- Highlight under "shipped" -->
+  <rect x="99" y="72" width="60" height="20" rx="2" fill="#5b8def" fill-opacity="0.16"/>
+  <rect x="99" y="90" width="60" height="2" fill="#5b8def" fill-opacity="0.55"/>
+
+  <!-- Comment bubble above the highlight -->
+  <g>
+    <rect x="86" y="30" width="112" height="30" rx="15" fill="#0b1220"/>
+    <text x="106" y="49" font-size="13" font-weight="700" fill="#ffffff">✎ Comment</text>
+    <path d="M136 60 l6 8 l6 -8 z" fill="#0b1220"/>
+  </g>
+
+  <!-- Thread popover -->
+  <g>
+    <rect x="430" y="40" width="290" height="210" rx="12" fill="#ffffff" stroke="#c9d2e0"/>
+    <!-- header -->
+    <text x="450" y="68" font-size="10.5" letter-spacing="1.4" fill="#8a94a6">COMMENT</text>
+    <text x="700" y="70" font-size="16" fill="#8a94a6" text-anchor="end">×</text>
+    <line x1="430" y1="82" x2="720" y2="82" stroke="#e7ebf2"/>
+    <!-- quote -->
+    <rect x="450" y="96" width="250" height="34" rx="4" fill="#f2f5fb"/>
+    <rect x="450" y="96" width="3" height="34" fill="#5b8def"/>
+    <text x="464" y="118" font-size="12.5" fill="#4a5568">“shipped”</text>
+    <!-- message -->
+    <text x="450" y="158" font-size="13" font-weight="700" fill="#0b1220">Priya</text>
+    <text x="500" y="158" font-size="11" fill="#8a94a6">2h ago</text>
+    <text x="450" y="180" font-size="13" fill="#1c2430">Strong line. Can we back it with</text>
+    <text x="450" y="198" font-size="13" fill="#1c2430">the retention data?</text>
+    <!-- reply field -->
+    <rect x="450" y="212" width="250" height="26" rx="6" fill="#ffffff" stroke="#c9d2e0"/>
+    <text x="462" y="229" font-size="12.5" fill="#8a94a6">Reply</text>
+  </g>
+</svg>

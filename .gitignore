@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Cloudflare / wrangler
+.wrangler/
+.dev.vars
+wrangler.toml.bak
+
+# node
+node_modules/
+npm-debug.log*
+
+# editor
+.vscode/
+.idea/

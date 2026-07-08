@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comment layer — local-only example</title>
+
+  <!-- 1. Configure BEFORE the script loads. Local-only: no backend. -->
+  <script>
+    window.CommentLayer = {
+      docId: "example-local",
+      backend: null,          // null (or omit) = comments live in this browser only
+      viewSelector: "article" // selectable text lives inside <article>
+    };
+  </script>
+
+  <!-- 2. The two files. Paths are relative to the repo root here;
+          in your own project, copy them in and adjust the paths. -->
+  <link rel="stylesheet" href="../../comment-layer.css">
+  <script src="../../comment-layer.js" defer></script>
+
+  <style>
+    body { font: 16px/1.6 system-ui, sans-serif; color: #1a1a1a; margin: 0; background: #fff; }
+    header, article, footer { max-width: 44rem; margin: 0 auto; padding: 0 1.5rem; }
+    header { padding-top: 3rem; }
+    h1 { font-size: 1.9rem; margin: 0 0 .3rem; }
+    .sub { color: #6b7280; margin: 0 0 2.5rem; }
+    article h2 { font-size: 1.25rem; margin: 2.2rem 0 .6rem; }
+    footer { border-top: 1px solid #e6e8eb; margin-top: 3rem; padding: 1.2rem 1.5rem 4rem;
+             display: flex; align-items: center; justify-content: space-between; }
+    .note { background: #f6f7f9; border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; font-size: .95rem; color: #4b5563; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Local-only example</h1>
+    <p class="sub">Two files, no backend. Comments are saved in your browser.</p>
+  </header>
+
+  <article>
+    <div class="note">
+      <strong>Try it:</strong> select any run of text in this article. A
+      <em>Comment</em> bubble appears — click it, add your name and a note. The
+      passage gets highlighted; click the highlight to reopen the thread. Use the
+      control at the bottom-right to hide comments or export them as Markdown.
+    </div>
+
+    <h2>How anchoring works</h2>
+    <p>
+      A comment is tied to the words you selected, not to a pixel position or a
+      DOM path. When the layer saves a thread it stores the exact quote plus about
+      forty characters of context on each side. On the next load it searches the
+      page for that quote and, if the text appears more than once, uses the stored
+      context to pick the right occurrence. Edit the surrounding prose and the
+      highlight still lands, as long as the quoted words survive.
+    </p>
+
+    <h2>What gets skipped</h2>
+    <p>
+      Navigation, buttons, links, and code blocks are excluded from selection by
+      default, so you comment on content rather than on chrome. That list is
+      configurable. You can also mark any element with a <code>data-cmt-skip</code>
+      attribute to keep it out of the commentable text.
+    </p>
+
+    <h2>Where comments live</h2>
+    <p>
+      In this example they live in localStorage, scoped to this browser and this
+      <code>docId</code>. Nobody else sees them. To run a shared team review, add
+      the Worker backend and point <code>backend</code> at it — the front end code
+      does not change beyond that one config line.
+    </p>
+  </article>
+
+  <footer>
+    <span style="color:#9199a5;font-size:.85rem">comment-layer · local-only</span>
+    <!-- The toggle/export control is injected into <footer> automatically. -->
+  </footer>
+</body>
+</html>

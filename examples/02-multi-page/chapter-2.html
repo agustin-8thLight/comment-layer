@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Field notes — Anchoring</title>
+
+  <link rel="stylesheet" href="theme.css">
+
+  <script src="comments-config.js"></script>
+  <link rel="stylesheet" href="../../comment-layer.css">
+  <script src="../../comment-layer.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="bar">
+      <span class="brand">Field notes</span>
+      <nav>
+        <a href="index.html">Overview</a>
+        <a href="chapter-2.html" aria-current="page">Anchoring</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1>Chapter 2 — Anchoring</h1>
+    <p class="dek">Why comments survive edits, and where they don't.</p>
+
+    <h2>The stored anchor</h2>
+    <p>
+      When you comment, the layer stores three strings: the exact text you
+      selected, a slice of what came before it, and a slice of what came after.
+      It never stores a DOM path or a character offset into the whole document,
+      because both of those break the moment anyone edits the page.
+    </p>
+
+    <h2>Re-finding the text</h2>
+    <p>
+      On load, the layer scans the page for the exact quote. If the quote appears
+      only once, that's the anchor. If it appears several times — imagine the word
+      "delivery" repeated across a section — it scores each occurrence by how much
+      of the stored before-and-after context still matches, and highlights the
+      best one. This is the same repeated word, resolved by its surroundings.
+    </p>
+
+    <h2>When an anchor is dropped</h2>
+    <p>
+      If the exact quoted text no longer exists anywhere on the page, the layer
+      can't place the highlight, so it quietly skips it. The comment isn't
+      deleted — it still shows up in the export — it just has nowhere visible to
+      attach. Rewrite the quoted words and you sever the anchor; edit around them
+      and it holds.
+    </p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  // Cloudflare Workers deploy: static assets + a small /api Worker for
+  // shared comments (D1). Deploy from this directory with `wrangler deploy`.
+  //
+  // Fill in the four >>> placeholders below, then follow README.md.
+
+  // >>> your project name (shows up in the worker URL)
+  "name": "my-doc-comments",
+  "main": "worker.js",
+  "compatibility_date": "2026-06-08",
+
+  "assets": {
+    // >>> path to your static site, RELATIVE TO THIS FILE.
+    // If this backend/ folder sits inside your site, use "..".
+    // If your built site is elsewhere, point at it (e.g. "../dist").
+    "directory": "..",
+    "binding": "ASSETS"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      // >>> the database name you passed to `wrangler d1 create`
+      "database_name": "my_doc_comments",
+      // >>> the id wrangler printed when it created the DB
+      "database_id": "PASTE_DATABASE_ID_HERE"
+    }
+  ],
+
+  "vars": {
+    // Heading used by GET /api/export (Markdown). Match your doc title.
+    "EXPORT_TITLE": "My doc review comments"
+  }
+}

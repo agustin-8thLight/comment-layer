@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Field notes — Overview</title>
+
+  <link rel="stylesheet" href="theme.css">
+
+  <!-- Shared config first, then the layer. Same two lines on every page. -->
+  <script src="comments-config.js"></script>
+  <link rel="stylesheet" href="../../comment-layer.css">
+  <script src="../../comment-layer.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="bar">
+      <span class="brand">Field notes</span>
+      <nav>
+        <a href="index.html" aria-current="page">Overview</a>
+        <a href="chapter-2.html">Anchoring</a>
+      </nav>
+      <!-- The comment toggle/export control is injected here (toggleHost). -->
+    </div>
+  </header>
+
+  <main>
+    <h1>Overview</h1>
+    <p class="dek">A two-page example. Comments anchor per page, and the export
+      groups them under the page labels set in <code>comments-config.js</code>.</p>
+
+    <div class="callout">
+      This page defines a small design system in <code>theme.css</code> — an
+      accent color, fonts, surfaces. The comment layer reads those same tokens,
+      so its highlights and popovers match the page. Nothing about the layer was
+      restyled to make that happen.
+    </div>
+
+    <h2>Comment on this page</h2>
+    <p>
+      Select this sentence and leave a note. Then go to the Anchoring page and
+      leave another. Each comment stays on the page where you made it, because a
+      thread records which page it belongs to alongside the quoted text.
+    </p>
+
+    <h2>Then export</h2>
+    <p>
+      Click <em>Export</em> in the header. The Markdown you get back has a section
+      per page, in the order declared in the config, with the nearest heading
+      shown above each quote. That structure is what makes the export easy to hand
+      to Claude for triage.
+    </p>
+  </main>
+</body>
+</html>

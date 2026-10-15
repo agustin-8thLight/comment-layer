@@ -252,11 +252,23 @@
     try { return root.querySelector(path.charAt(0) === "#" ? path : ":scope > " + path); }
     catch (e) { return null; }
   }
-  function pinLabel(node) {
+  function ownLabel(node) {
     var t = (node.getAttribute && (node.getAttribute("alt") || node.getAttribute("aria-label"))) ||
       (node.textContent || "").replace(/\s+/g, " ").trim();
-    if (t.length > 80) t = t.slice(0, 80) + "…";
-    return t || "<" + node.tagName.toLowerCase() + ">";
+    return t.length > 80 ? t.slice(0, 80) + "…" : t;
+  }
+  // What the pin sits on, for the composer and the export. An element
+  // with no text of its own (an image with empty alt, a box) borrows the
+  // text of its nearest labelled ancestor: "<img> in Artist name".
+  function pinLabel(node) {
+    var t = ownLabel(node);
+    if (t) return t;
+    var tag = "<" + node.tagName.toLowerCase() + ">", up = node.parentElement;
+    for (var i = 0; up && i < 4 && up !== viewRoot(); i++, up = up.parentElement) {
+      var u = ownLabel(up);
+      if (u) return tag + " in " + u;
+    }
+    return tag;
   }
   function capturePin(e) {
     var root = viewRoot();

@@ -113,7 +113,9 @@ numbered marker; click it to read or reply.
   anchors across big markup rewrites; that's the tradeoff for commenting on
   things that aren't text.
 - **Export** lists pins as `pin on: “<label>”`, where the label is the clicked
-  element's alt text, aria-label, or text.
+  element's alt text, aria-label, or text. An element with none of those (an
+  image with empty alt) borrows its nearest labelled ancestor's text, e.g.
+  `<img> in Artist name`.
 - Pins count toward the Commenting badge. Turn them off with `pins: false`.
 
 ## Single-page apps and framework routers

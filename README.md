@@ -2,7 +2,8 @@
 
 Highlight-to-comment for any HTML page. Readers select text, leave a note, and
 the comment anchors to the words themselves, so it survives edits and
-re-renders. No framework, no build step, no login. Two files to get running.
+re-renders. For things that aren't text (an image, spacing, a layout), a plain
+click drops a pin instead. No framework, no build step, no login. Two files to get running.
 
 It's the review layer built into a series of internal sites, extracted so you
 can drop it into your own work.
@@ -13,14 +14,21 @@ can drop it into your own work.
 
 - **Select-to-comment.** Highlight any text, a bubble appears, leave a threaded
   comment. Replies, author-only delete, names remembered.
+- **Click to drop a pin.** In commenting mode, click (don't drag) anywhere in
+  the view to pin a comment to that spot. Pins stick to the element you clicked
+  and follow it through resizes and reflow. Drag still selects text.
 - **Anchored highlights.** Comments attach to the quoted text plus its
   surrounding context, not to a DOM path — so they hold up when the page changes.
 - **Viewing / commenting modes.** Read with links live; switch to commenting
   (from the top bar, or just by starting a comment) and in-view links go inert so
-  text is clean to select — including link text itself.
+  text is clean to select, including link text itself. Set `showInView: false`
+  to keep viewing mode looking exactly like the design.
+- **Works with framework routers.** `spa: true` follows hash routing and
+  history-API navigation (Next `<Link>`, React Router), so highlights and pins
+  repaint on every client-side page change.
 - **Local by default, shared when you want.** With no backend, each visitor's
   comments live in their own browser. Add the included Cloudflare Worker and
-  everyone sees the same threads.
+  everyone sees the same threads, optionally behind a shared password.
 - **Markdown export.** One click pulls every comment out grouped by page and by
   the passage it sits on. Made to paste straight into Claude for triage.
 - **Themeable.** Every color and font reads a CSS variable with a fallback. On a
@@ -87,8 +95,9 @@ See [`examples/`](examples/).
 
 - **Not auth.** Names are honor-system; delete is gated by a per-browser token,
   not a login. Fine for internal review, not for anything adversarial.
-- **Not a general annotation engine.** It anchors to text you can select inside
-  one container. It doesn't annotate images, or ranges spanning skipped regions.
+- **Not a general annotation engine.** Text comments anchor to text inside one
+  container; pins anchor to an element and a spot on it. No drawing, no regions,
+  no ranges spanning skipped areas.
 - **Not real-time.** Comments load when the page loads. No live cursors or push.
 
 ## Files
@@ -99,6 +108,7 @@ comment-layer.css    styles (CSS-variable themeable)
 backend/             Cloudflare Worker + D1 for shared comments
 examples/            two runnable, no-build examples
 docs/                integration + architecture
+CHANGELOG.md         what changed between versions
 ```
 
 ## License

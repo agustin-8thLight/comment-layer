@@ -14,7 +14,7 @@ Four files:
 |------|------------|
 | `worker.js` | The Worker. Serves your assets + the `/api` routes. Generic, don't edit. |
 | `schema.sql` | The two D1 tables (`threads`, `messages`). |
-| `wrangler.jsonc` | Deploy config. Four `>>>` placeholders to fill in. |
+| `wrangler.jsonc` | Deploy config. Four `>>>` placeholders to fill in, plus optional password-gate vars. |
 | `README.md` | This file. |
 
 ---
@@ -64,9 +64,9 @@ origin, since the Worker serves both):
 </script>
 ```
 
-Same origin means no CORS and no login. **The URL is the only gate** — anyone
-with the link can read and comment. That's the intended tradeoff for a quick
-internal review. See access control below to lock it down.
+Same origin means no CORS and no login. Out of the box **the URL is the only
+gate**: anyone with the link can read and comment. See access control below to
+lock it down.
 
 ## Pull comments back out
 
@@ -87,16 +87,40 @@ internal review. See access control below to lock it down.
 
 ## Access control
 
-The Worker is public by default. Two common ways to restrict it:
+The Worker is public by default. Two built-in ways to restrict it:
 
-- **Cloudflare Access** (recommended for internal review). Put the Worker behind
-  an Access policy so only certain identities can load it. No code change.
-- **A shared secret / obscure URL.** Weakest option; fine for low-stakes drafts.
+- **Cloudflare Access** (recommended when everyone has a company email). Put the
+  Worker behind an Access policy so only certain identities can load it. No code
+  change.
+- **Shared password** (when reviewers are outside your identity provider, e.g.
+  a client). Set a secret and the Worker shows a password page in front of every
+  page and `/api` route:
+
+  ```bash
+  npx wrangler secret put SITE_PASSWORD
+  ```
+
+  A correct entry sets a 30-day HttpOnly cookie holding a hash, never the
+  password. Set `GATE_TITLE` (the heading on the password page) and
+  `GATE_COOKIE` (unique per site, so two review sites never share a session) in
+  `wrangler.jsonc`. Delete the secret to open the site again. For local
+  `wrangler dev`, put `SITE_PASSWORD=...` in `backend/.dev.vars` (gitignored).
+
+  This relies on `"run_worker_first": true` in `wrangler.jsonc`, which routes
+  page requests through the Worker. Keep it, or static files skip the gate.
 
 > **8th Light note.** For internal reviews, scope Cloudflare Access to
 > `@8thlight.com`, the same pattern used on other internal review sites. Deploy
 > on the 8th Light Cloudflare account. Decide access **before** you circulate
 > the link, and don't put confidential client material behind URL-only gating.
+
+## Upgrading an existing deployment
+
+Copy the new `comment-layer.js`, `comment-layer.css` and `worker.js` over the
+old ones and run `npx wrangler deploy`. The Worker adds any new columns (pins
+added `threads.pin`) on its first request, so there's no migration to run.
+Check that your `wrangler.jsonc` has `"run_worker_first": true` under `assets`
+if you want the password gate.
 
 ## Housekeeping
 

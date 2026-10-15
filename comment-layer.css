@@ -95,6 +95,37 @@ mark.cmt-hl[data-active="true"] { background:color-mix(in srgb, var(--accent, #2
    clear they won't navigate. */
 .cmt-commenting a[href] { cursor:text; }
 
+/* Pins: a teardrop whose tip sits exactly on the clicked point. Click
+   (no drag) in commenting mode drops one. */
+.cmt-pins { position:absolute; top:0; left:0; width:0; height:0; z-index:140; }
+.cmt-pin {
+  position:absolute; transform:translate(0, -100%); transform-origin:0 100%;
+  appearance:none; cursor:pointer; padding:0;
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:26px; height:26px; box-sizing:border-box;
+  background:var(--accent, #2563eb); color:#fff;
+  border:2px solid var(--surface, #fff); border-radius:50% 50% 50% 0;
+  box-shadow:0 2px 8px rgba(0,0,0,.22);
+  font-family:var(--font-mono, ui-monospace, monospace); font-weight:600; font-size:11px; line-height:1;
+  transition:transform var(--cmt-fast, 140ms) var(--cmt-ease, cubic-bezier(.4,0,.2,1));
+}
+.cmt-pin:hover, .cmt-pin[data-active="true"] { transform:translate(0, -100%) scale(1.15); }
+.cmt-pin:focus-visible { outline:2px solid var(--accent, #2563eb); outline-offset:2px; }
+.cmt-pin--pending { background:var(--text-strong, #111); cursor:default; animation:cmt-pin-in 140ms var(--cmt-ease, cubic-bezier(.4,0,.2,1)); }
+@keyframes cmt-pin-in { from { opacity:0; transform:translate(0, -80%); } to { opacity:1; transform:translate(0, -100%); } }
+
+/* showInView: false. Viewing mode reads as the design itself: no
+   highlight tint, no pins, clicks pass through to whatever sits
+   underneath. A thread opened elsewhere still lights its passage. */
+body.cmt-quiet-view.cmt-mode-view mark.cmt-hl:not([data-active="true"]) {
+  background:none; box-shadow:none; cursor:inherit; pointer-events:none;
+}
+body.cmt-quiet-view.cmt-mode-view .cmt-pin { display:none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cmt-pin, .cmt-pin--pending, .cmt-bubble, .cmt-pop { transition:none; animation:none; }
+}
+
 /* Floating "add comment" bubble */
 .cmt-bubble {
   position:absolute; z-index:150; transform:translate(-50%, -100%);
@@ -136,6 +167,7 @@ mark.cmt-hl[data-active="true"] { background:color-mix(in srgb, var(--accent, #2
 }
 .cmt-quote::before { content:"\201C"; }
 .cmt-quote::after { content:"\201D"; }
+.cmt-quote--pin::before, .cmt-quote--pin::after { content:none; }
 
 .cmt-body { padding:.9rem 1rem; }
 
@@ -174,6 +206,6 @@ mark.cmt-hl[data-active="true"] { background:color-mix(in srgb, var(--accent, #2
 
 /* Keep comments out of print */
 @media print {
-  .cmt-tools, .cmt-bubble, .cmt-pop { display:none !important; }
+  .cmt-tools, .cmt-bubble, .cmt-pop, .cmt-pins { display:none !important; }
   mark.cmt-hl { background:transparent; box-shadow:none; color:inherit; }
 }

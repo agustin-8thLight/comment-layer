@@ -14,7 +14,10 @@
     // If this backend/ folder sits inside your site, use "..".
     // If your built site is elsewhere, point at it (e.g. "../dist").
     "directory": "..",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // Route every request through worker.js first, so the optional
+    // password gate covers pages too, not just /api.
+    "run_worker_first": true
   },
 
   "d1_databases": [
@@ -29,6 +32,11 @@
 
   "vars": {
     // Heading used by GET /api/export (Markdown). Match your doc title.
-    "EXPORT_TITLE": "My doc review comments"
+    "EXPORT_TITLE": "My doc review comments",
+    // Optional password gate: set the password as a SECRET, never here:
+    //   npx wrangler secret put SITE_PASSWORD
+    // These two only matter once it is set.
+    "GATE_TITLE": "My doc review",
+    "GATE_COOKIE": "my_doc_review_auth"
   }
 }

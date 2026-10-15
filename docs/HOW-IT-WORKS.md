@@ -12,9 +12,10 @@ Everything is threads and messages.
 thread = {
   id,           // "t-..." unique
   tab,          // page id the thread lives on (currentView)
-  exact,        // the quoted text
+  exact,        // the quoted text (pins: a label of the clicked element)
   prefix,       // ~40 chars before the quote  } context for re-anchoring
-  suffix,       // ~40 chars after the quote    }
+  suffix,       // ~40 chars after the quote    } (both empty for pins)
+  pin,          // pins only: { path, x, y, rx, ry }, see Pins below
   messages: [ {
     id,         // "m-..."
     name,       // author, honor-system
@@ -78,6 +79,29 @@ Then `wrapPortion` splits the relevant text nodes and wraps the matched range in
 - Highlights are re-derived from scratch on every render (`unwrap` then re-wrap),
   so the DOM never accumulates stale marks.
 
+## Pins
+
+A pin is a thread with a `pin` field. Text anchoring skips it (its `exact` is
+only a label), and it renders as a button in one absolutely positioned layer on
+`<body>`, outside the view, so it never enters the text map or shifts layout.
+
+- **Capture.** `capturePin` takes the click target and records `path` (a chain
+  of `tag:nth-of-type(n)` from the view root, cut short at the nearest element
+  with a non-`cmt-` id), `x`/`y` (the click as fractions of the target's box) and
+  `rx`/`ry` (the click as fractions of the view root's box).
+- **Render.** `pinPoint` resolves the path with `root.querySelector(":scope > …")`
+  and turns the fractions back into page coordinates. If the path no longer
+  resolves it uses `rx`/`ry` on the root. A target with no box (hidden) hides
+  its pin.
+- **Keeping up with layout.** `positionPins` reruns on window resize, on a
+  `ResizeObserver` of the view root, and on any `load` event in the document
+  (late images and fonts), so pins track reflow without polling.
+- **Click vs. drag.** The `click` handler drops a pin only in commenting mode,
+  when the pointer moved less than 4px since `mousedown`, the selection is
+  collapsed, and no popover or bubble was open (that click just dismisses it).
+  It waits 250ms and gives up if a double-click or selection happened in
+  between.
+
 ## Storage adapter
 
 `Store` has one interface (`load`, `addThread`, `addMessage`, `deleteMessage`)
@@ -120,9 +144,27 @@ persisted per `docId`.
 Because `<a>` is not in `skipSelector`, link text is part of the text map, so a
 comment can anchor to it and a highlight can be wrapped *inside* an anchor.
 Clicking a highlight is checked before the link-inert rule, so reading a comment
-always wins over following the link. A `dragstart` handler cancels native link
-dragging inside the view so a drag-select over link text doesn't become a link
-drag.
+always wins over following the link.
+
+A drag that starts on a link is a link drag in Chrome even if `dragstart` is
+cancelled, so link text would not select. In commenting mode a capture-phase
+`mousedown` removes the link's `href` for the length of the press (an anchor
+without `href` is plain text), and a capture-phase `mouseup` restores it on the
+next tick, after the click has dispatched. The click itself is cancelled, which
+framework links (Next's `<Link>` checks `defaultPrevented`) respect.
+
+With `showInView: false` the body gets `cmt-quiet-view`, and in viewing mode
+highlights lose their tint and `pointer-events`, and pins hide. The page reads
+as the design itself.
+
+## Client-side navigation
+
+With `spa: true`, `history.pushState` and `replaceState` are wrapped so that a
+call which changes the URL schedules `refresh()`, as do `hashchange` and
+`popstate`. `refresh()` closes open UI, re-renders highlights and pins, reapplies
+the mode, and re-observes the view root (a router may have replaced it). It is
+exposed as `window.CommentLayer.refresh` for hosts that change content without
+touching the URL.
 
 Entering commenting mode: the top-bar segmented control sets it directly, and
 the selection **Comment** bubble sets it as a side effect (selecting in viewing
@@ -160,6 +202,8 @@ Claude for triage.
   repeated passages at the cost of record size.
 - **Add fields to a comment** (e.g. a category): extend the `message` object in
   `openComposer`, the `messages` table in `schema.sql`, and the INSERT/SELECT in
-  `worker.js`. Keep the local and backend paths in sync.
+  `worker.js`. Keep the local and backend paths in sync. If existing databases
+  need the column, add it in `ensureSchema` the way `pin` is, so a Worker
+  redeploy is the whole upgrade.
 - **Swap the store** (e.g. a different backend): reimplement the four `Store`
   methods. Nothing else should need to change.

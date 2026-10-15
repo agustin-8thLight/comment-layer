@@ -40,16 +40,23 @@ All fields are optional except that you'll almost always want `docId` and
 | `title` | string | `"<docId> comments"` | Heading at the top of the exported Markdown. |
 | `exportFilename` | string | `"<docId>-comments.md"` | Filename for the browser Export download. |
 | `toggleHost` | string | `".cmt-host, .footer-tools, .site-footer, .header-inner, .site-header, header, footer"` | Where the mode + export control is injected. First match wins. **If nothing matches, the control floats bottom-right.** |
-| `spa` | boolean | `false` | Set `true` for single-page hubs that swap content on `hashchange`; the layer re-renders highlights and counts when the hash changes. |
+| `spa` | boolean | `false` | Set `true` when pages change without a full reload: hash routing, or a history-API router (Next `<Link>`, React Router). The layer re-renders highlights, pins and counts on `hashchange`, `popstate`, `history.pushState` and `history.replaceState`. |
+| `pins` | boolean | `true` | In commenting mode, a click (no drag) drops a pin comment on that spot. `false` turns pins off; text selection is unaffected. |
+| `showInView` | boolean | `true` | `false` makes viewing mode show the page untouched: no highlight tint, no pins, clicks pass through to links underneath. Everything reappears in commenting mode. Good for design reviews where the page itself is under review. |
 | `defaultMode` | string | `"view"` | Mode a reader lands in: `"view"` (links live) or `"comment"` (in-view links inert, select to annotate). See Modes. |
 
 ### Default `skipSelector`
 
 ```
-nav, header, footer, aside, button, code, pre, script, style,
-input, textarea, select, [contenteditable], .cmt-pop, .cmt-bubble,
-.cmt-tools, [data-cmt-skip]
+nav, body > header, [role=banner], footer, aside, button, code, pre,
+script, style, input, textarea, select, [contenteditable], .cmt-pop,
+.cmt-bubble, .cmt-tools, .cmt-pin, [data-cmt-skip]
 ```
+
+Only the page-level `<header>` is skipped. A `<header>` inside the view is
+usually a page or section intro, which reviewers want to quote. If your site
+masthead is nested deeper (common in framework layouts), keep it outside your
+`viewSelector` element, or give it `data-cmt-skip`.
 
 `<a>` is deliberately absent: link text is commentable (see Modes). To exclude
 something specific without rewriting the whole list, add the `data-cmt-skip`
@@ -64,9 +71,9 @@ control in your `toggleHost` switches between them.
 - **Viewing** (default). Links work normally, comments are visible and clickable
   to read. This is how most people arrive.
 - **Commenting.** Links *inside the view* go inert (a click won't navigate) so
-  the whole surface — link text included — is clean to select. Selecting text
-  opens the composer. Site chrome outside the view (nav, header) keeps working,
-  so multi-page navigation is unaffected.
+  the whole surface, link text included, is clean to select. Selecting text
+  opens the composer. A plain click drops a pin (see below). Site chrome outside
+  the view (nav, header) keeps working, so multi-page navigation is unaffected.
 
 A reader enters commenting mode two ways:
 
@@ -78,13 +85,53 @@ A reader enters commenting mode two ways:
 The mode is remembered per `docId` in localStorage. Set `defaultMode: "comment"`
 to open straight into commenting (e.g. a doc whose only purpose is review).
 
-**Two behaviors worth knowing:**
+**Behaviors worth knowing:**
 
-- Clicking a highlight always opens its thread, even in viewing mode and even if
-  the highlight sits on a link — reading the comment wins over following the
-  link. (That specific link is still reachable from its `href` elsewhere.)
-- Content links are made non-draggable inside the view so a drag-select over
-  link text doesn't turn into a link drag. Site-chrome links are untouched.
+- Clicking a highlight opens its thread, even in viewing mode and even if the
+  highlight sits on a link: reading the comment wins over following the link.
+  With `showInView: false`, highlights are click-through in viewing mode, so
+  the link wins there instead.
+- Browsers treat a drag that starts on a link as dragging the link, not
+  selecting its text. In commenting mode the layer removes the link's `href`
+  for the length of the press and puts it back right after, so link text
+  selects like any other text. Site-chrome links are untouched.
+
+## Pins
+
+In commenting mode, click anywhere in the view without dragging and a composer
+opens with a provisional pin on the spot. Save it and the pin becomes a
+numbered marker; click it to read or reply.
+
+- **Click drops a pin, drag selects text, double-click selects a word.** The
+  layer waits a beat after a click so a double-click never leaves a stray pin.
+- **A click while a popover or the Comment bubble is open only closes it.**
+- **Anchoring.** A pin stores a structural path from the view root to the
+  element you clicked, plus where on that element you clicked (as fractions of
+  its box). It follows the element through resizes, reflow and late-loading
+  images. If the markup changes so the path no longer resolves, it falls back to
+  the same relative spot on the view root. Pins are less durable than text
+  anchors across big markup rewrites; that's the tradeoff for commenting on
+  things that aren't text.
+- **Export** lists pins as `pin on: “<label>”`, where the label is the clicked
+  element's alt text, aria-label, or text.
+- Pins count toward the Commenting badge. Turn them off with `pins: false`.
+
+## Single-page apps and framework routers
+
+Set `spa: true`. The layer then repaints on `hashchange`, `popstate`, and any
+`history.pushState` / `replaceState` that changes the URL, which covers Next.js
+`<Link>`, React Router and most client routers. The page id is the pathname, so
+query strings and hashes don't create separate pages.
+
+If your app changes the page some other way (content swapped in place, no URL
+change), call the refresh hook yourself after it renders:
+
+```js
+window.CommentLayer.refresh();
+```
+
+In a React app, load the layer once in the root layout (not per page), behind
+a flag so it ships only in review builds.
 
 ## Theming
 
